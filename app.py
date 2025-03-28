@@ -2,14 +2,27 @@ import streamlit as st
 import numpy as np
 import pickle
 
-# Load the trained model
+# Set page configuration
+st.set_page_config(
+    page_title="Breast Cancer Prediction",
+    page_icon="🩺",
+    layout="wide"
+)
+
+# Load the model
 with open("cancer_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-st.title("🔬 Breast Cancer Prediction App")
-st.markdown("Enter the values for the 30 input features below:")
+# Title
+st.title("🩺 Breast Cancer Risk Prediction")
+st.markdown("""
+Welcome to the **Breast Cancer Prediction App**.
+This tool uses a logistic regression model trained on the Wisconsin Breast Cancer dataset to predict whether a tumor is **benign** or **malignant** based on cell features.
+""")
 
-# Define all 30 input features
+# Sidebar Inputs
+st.sidebar.header("📊 Input Features")
+
 features = [
     "Radius_mean", "Texture_mean", "Perimeter_mean", "Area_mean", "Smoothness_mean",
     "Compactness_mean", "Concavity_mean", "Concave_points_mean", "Symmetry_mean", "Fractal_dimension_mean",
@@ -19,19 +32,22 @@ features = [
     "Compactness_worst", "Concavity_worst", "Concave_points_worst", "Symmetry_worst", "Fractal_dimension_worst"
 ]
 
-# Create a dictionary to store input values
 user_inputs = {}
+for feature in features:
+    user_inputs[feature] = st.sidebar.number_input(f"{feature}", value=0.0)
 
-# Layout: Display 2 columns for cleaner UI
-col1, col2 = st.columns(2)
-for i, feature in enumerate(features):
-    with (col1 if i % 2 == 0 else col2):
-        user_inputs[feature] = st.number_input(f"{feature}", value=0.0)
-
-# Collect inputs into a single array for prediction
-input_array = np.array([list(user_inputs.values())]).astype(np.float32)
-
-# Make prediction
+# Prediction button
+st.markdown("### 🧠 Prediction Result")
 if st.button("Predict"):
+    input_array = np.array([list(user_inputs.values())]).astype(np.float32)
     prediction = model.predict(input_array)[0]
-    st.success(f"Prediction: {'Malignant' if prediction == 1 else 'Benign'}")
+    result = "🟢 Benign" if prediction == 0 else "🔴 Malignant"
+    st.subheader(f"Prediction: {result}")
+    if prediction == 1:
+        st.warning("⚠️ The model predicts a *malignant* tumor. Please consult a healthcare provider.")
+    else:
+        st.success("✅ The model predicts a *benign* tumor.")
+
+# Footer
+st.markdown("---")
+st.caption("Built with ❤️ using Streamlit. Model trained on the Breast Cancer Wisconsin Diagnostic dataset.")
